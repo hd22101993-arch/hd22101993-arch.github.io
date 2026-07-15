@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat ICT - Trợ lý AI của bạn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ict: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-slow': 'bounce 2s infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .chat-bubble { animation: popIn 0.3s ease-out; }
+    @keyframes popIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    pre { position: relative; }
+    .code-copy-btn { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.2s; }
+    pre:hover .code-copy-btn { opacity: 1; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex selection:bg-ict-500 selection:text-white">
+
+  <aside id="sidebar" class="w-72 bg-slate-950 border-r border-slate-800 flex flex-col transition-all duration-300 absolute md:relative z-20 h-full -translate-x-full md:translate-x-0">
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2 font-bold text-xl tracking-tight">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-ict-400 to-ict-700 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-ict-500/20">ICT</div>
+        <span>Chat ICT</span>
+      </div>
+      <button onclick="toggleSidebar()" class="md:hidden p-1 hover:bg-slate-800 rounded">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="p-3">
+      <button onclick="newChat()" class="w-full py-2.5 px-3 rounded-lg border border-slate-700 hover:border-ict-500 hover:bg-slate-900 transition flex items-center gap-2 text-sm font-medium">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Cuộc trò chuyện mới
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-3 space-y-1" id="chatHistory"></div>
+
+    <div class="p-3 border-t border-slate-800 space-y-1">
+      <button onclick="exportChats()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 text-sm text-slate-300 transition flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Xuất lịch sử
+      </button>
+      <button onclick="toggleSettings()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 text-sm text-slate-300 transition flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Cài đặt AI
+      </button>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-10 hidden md:hidden glass"></div>
+
+  <main class="flex-1 flex flex-col h-full relative bg-gradient-to-b from-slate-900 to-slate-950">
+    <header class="h-14 border-b border-slate-800 flex items-center justify-between px-4 glass bg-slate-900/70 sticky top-0 z-10">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="md:hidden p-2 -ml-2 hover:bg-slate-800 rounded-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-slate-100">Chat ICT</span>
+          <span id="modelBadge" class="text-xs px-2 py-0.5 rounded-full bg-ict-900 text-ict-400 border border-ict-700/50 font-medium">Demo Mode</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleSettings()" class="p-2 hover:bg-slate-800 rounded-lg transition text-slate-400 hover:text-slate-100" title="Cài đặt">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="chatContainer" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth">
+      <div id="welcomeScreen" class="flex flex-col items-center justify-center h-full text-center space-y-6">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-ict-400 to-ict-700 flex items-center justify-center shadow-2xl shadow-ict-500/20 mb-2">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-400 pb-1">Chat ICT</h1>
+          <p class="text-slate-400 mt-2 max-w-md mx-auto">Trợ lý AI mạnh mẽ, nhanh chóng. Hãy đặt câu hỏi, viết code, dịch thuật hoặc trò chuyện.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-2xl text-left mt-4">
+          <button onclick="fillAndSend('Viết đoạn code JavaScript tạo hiệu ứng đánh máy')" class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-ict-500/50 hover:bg-slate-800 transition group">
+            <div class="text-ict-400 mb-2 text-sm font-medium">💻 Viết Code</div>
+            <div class="text-slate-300 text-sm">"Viết đoạn code JavaScript tạo hiệu ứng đánh máy..."</div>
+          </button>
+          <button onclick="fillAndSend('Giải thích Machine Learning bằng tiếng Việt đơn giản')" class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-ict-500/50 hover:bg-slate-800 transition group">
+            <div class="text-ict-400 mb-2 text-sm font-medium">🧠 Giải thích</div>
+            <div class="text-slate-300 text-sm">"Giải thích Machine Learning bằng tiếng Việt đơn giản"</div>
+          </button>
+          <button onclick="fillAndSend('Dịch đoạn văn sau sang tiếng Anh: Xin chào thế giới')" class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-ict-500/50 hover:bg-slate-800 transition group">
+            <div class="text-ict-400 mb-2 text-sm font-medium">🌐 Dịch thuật</div>
+            <div class="text-slate-300 text-sm">"Dịch đoạn văn này sang tiếng Anh..."</div>
+          </button>
+        </div>
+        <div class="text-xs text-slate-600 mt-4">Đang chạy ở chế độ Demo. Vào Cài đặt để kết nối API thật.</div>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-800 bg-slate-900/80 glass p-3 md:p-4">
+      <div class="max-w-3xl mx-auto relative">
+        <textarea id="userInput" rows="1" placeholder="Hỏi Chat ICT bất cứ điều gì..." class="w-full bg-slate-800/80 text-slate-100 placeholder-slate-400 rounded-xl pl-4 pr-12 py-3.5 border border-slate-700 focus:border-ict-500 focus:ring-1 focus:ring-ict-500/50 outline-none resize-none max-h-48 transition shadow-lg" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+        <button onclick="sendMessage()" id="sendBtn" class="absolute right-2 top-2 p-1.5 bg-ict-600 hover:bg-ict-500 text-white rounded-lg transition disabled:opacity-40 disabled:hover:bg-ict-600">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+      <div class="text-center mt-2 text-[11px] text-slate-500">Chat ICT có thể đưa ra thông tin không chính xác. Hãy kiểm chứng các câu trả lời quan trọng.</div>
+    </div>
+  </main>
+
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 glass" onclick="toggleSettings()"></div>
+    <div class="absolute right-0 top-0 h-full w-full md:w-[400px] bg-slate-900 border-l border-slate-800 shadow-2xl transform translate-x-full transition-transform duration-300" id="settingsPanel">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Cài đặt AI</h2>
+        <button onclick="toggleSettings()" class="p-1 hover:bg-slate-800 rounded text-slate-400"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="p-5 space-y-6 overflow-y-auto h-[calc(100%-65px)]">
+        <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60">
+          <div class="text-sm font-medium text-slate-200 mb-1">Chế độ hoạt động</div>
+          <div class="text-xs text-slate-400 mb-3">Chọn nguồn AI để trả lời câu hỏi của bạn.</div>
+          <select id="aiProvider" onchange="updateProvider()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-ict-500 outline-none">
+            <option value="demo">🧪 Demo Mode (Offline - Không cần API)</option>
+            <option value="openai">🔑 OpenAI (GPT-3.5/4)</option>
+            <option value="openrouter">🌐 OpenRouter (Nhiều model)</option>
+            <option value="custom">⚙️ Custom Endpoint (OpenAI-compatible)</option>
+          </select>
+        </div>
+
+        <div id="apiKeySection" class="space-y-3 hidden">
+          <div>
+            <label class="text-sm font-medium text-slate-300 block mb-1">API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="sk-..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-ict-500 outline-none" onchange="saveSettings()">
+          </div>
+          <div id="endpointSection" class="hidden">
+            <label class="text-sm font-medium text-slate-300 block mb-1">Base URL</label>
+            <input type="text" id="baseUrlInput" placeholder="https://api.openai.com/v1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-ict-500 outline-none" onchange="saveSettings()">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-slate-300 block mb-1">Model</label>
+            <input type="text" id="modelInput" placeholder="gpt-3.5-turbo" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-ict-500 outline-none" onchange="saveSettings()">
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-400 leading-relaxed bg-slate-800/30 p-3 rounded-lg border border-slate-800">
+          <strong class="text-slate-300">💡 Hướng dẫn nhanh:</strong><br/>
+          • <strong>Demo Mode:</strong> Không cần API key. AI trả lời dựa trên kịch bản có sẵn để bạn thử giao diện.<br/>
+          • <strong>OpenAI/OpenRouter:</strong> Nhập API key để chat với AI thật. Key chỉ lưu trên trình duyệt của bạn.<br/>
+          • <strong>Custom:</strong> Dùng cho LM Studio, Ollama, v.v. với endpoint dạng OpenAI-compatible.
+        </div>
+
+        <div class="pt-4 border-t border-slate-800">
+          <button onclick="clearAllChats()" class="w-full py-2 rounded-lg border border-red-900/50 text-red-400 hover:bg-red-900/20 transition text-sm font-medium">Xóa toàn bộ lịch sử</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* === STATE & CONFIG === */
+    let chats = [];
+    let currentChatId = null;
+    let isGenerating = false;
+    let currentController = null;
+    let memoryStore = {};
+    const ICT_WELCOME = "Xin chào! Tôi là **Chat ICT** — trợ lý AI được xây dựng để giúp bạn viết code, giải thích khái niệm, dịch thuật và nhiều hơn nữa. Hôm nay tôi có thể giúp gì cho bạn?";
+ const DEFAULT_PROVIDER = 'openrouter';
+    // Hiện hộp thoại yêu cầu bạn nhập key khi vừa mở trang web lên
+const apiKey = prompt("Vui lòng nhập OpenRouter API Key của bạn để chat:");
+
+if (!apiKey) {
+    alert("Bạn phải nhập API Key thì AI mới hoạt động được!");
+} else {
+    // Đoạn code gọi API OpenRouter của bạn sẽ dùng biến apiKey này
+    // Ví dụ trong phần Headers của fetch:
+    // "Authorization": `Bearer ${apiKey}`
+}
+    const DEFAULT_BASEURL = 'https://openrouter.ai/api/v1';
+    const DEFAULT_MODEL = 'openai/gpt-3.5-turbo';
+
+    /* === STORAGE HELPERS === */
+    function storageGet(key) {
+      try { return localStorage.getItem(key); } catch (e) { return memoryStore[key] || null; }
+    }
+    function storageSet(key, value) {
+      try { localStorage.setItem(key, value); } catch (e) { memoryStore[key] = value; }
+    }
+
+    /* === CHAT MANAGEMENT === */
+    function newChat(silent) {
+      const id = 'chat_' + Date.now();
+      const chat = { id: id, title: 'Cuộc trò chuyện mới', messages: [{role:'assistant', content: ICT_WELCOME, time: Date.now()}], created: Date.now() };
+      chats.unshift(chat);
+      saveChats();
+      loadChat(id);
+      if (!silent) renderHistory();
+    }
+
+    function loadChat(id) {
+      currentChatId = id;
+      const chat = chats.find(c => c.id === id);
+      const container = document.getElementById('chatContainer');
+      container.innerHTML = '';
+      const welcome = document.getElementById('welcomeScreen');
+      if (welcome) welcome.classList.add('hidden');
+
+      if (chat) {
+        chat.messages.forEach(function(msg) { appendMessage(msg.role, msg.content, false); });
+      }
+      highlightCode();
+      renderHistory();
+      scrollToBottom();
+    }
+
+    function getCurrentChat() {
+      return chats.find(c => c.id === currentChatId);
+    }
+
+    function addMessageToCurrent(role, content) {
+      const chat = getCurrentChat();
+      if (!chat) return;
+      chat.messages.push({role: role, content: content, time: Date.now()});
+      if (role === 'user') {
+        const userCount = chat.messages.filter(m => m.role === 'user').length;
+        if (userCount === 1) {
+          chat.title = content.slice(0, 40) + (content.length > 40 ? '...' : '');
+        }
+      }
+      saveChats();
+      renderHistory();
+    }
+
+    function saveChats() { storageSet('ict_chats', JSON.stringify(chats)); }
+
+    function renderHistory() {
+      const el = document.getElementById('chatHistory');
+      if (!chats.length) { el.innerHTML = ''; return; }
+      el.innerHTML = chats.map(function(c) {
+        const activeClass = (c.id === currentChatId) ? 'bg-slate-800/60 text-ict-300 border border-ict-500/20' : 'text-slate-300';
+        return '<button onclick="loadChat(\'' + c.id + '\')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition text-sm truncate ' + activeClass + '">' +
+ '<div class="truncate font-medium">' + escapeHtml(c.title || 'Cuộc trò chuyện') + '</div>' +
+               '<div class="text-[10px] text-slate-500">' + new Date(c.created).toLocaleDateString('vi-VN') + '</div></button>';
+      }).join('');
+    }
+
+    function clearAllChats() {
+      if (!confirm('Xác nhận xóa toàn bộ lịch sử?')) return;
+      chats = [];
+      memoryStore = {};
+      newChat(true);
+      renderHistory();
+      toggleSettings();
+      try { localStorage.removeItem('ict_chats'); } catch(e){}
+    }
+
+    function exportChats() {
+      const blob = new Blob([JSON.stringify(chats, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'chat-ict-history.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    /* === UI HELPERS === */
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('sidebarOverlay');
+      if (sb.classList.contains('-translate-x-full')) {
+        sb.classList.remove('-translate-x-full');
+        ov.classList.remove('hidden');
+      } else {
+        sb.classList.add('-translate-x-full');
+        ov.classList.add('hidden');
+      }
+    }
+
+    function toggleSettings() {
+      const modal = document.getElementById('settingsModal');
+      const panel = document.getElementById('settingsPanel');
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        setTimeout(function() { panel.classList.remove('translate-x-full'); }, 10);
+      } else {
+        panel.classList.add('translate-x-full');
+        setTimeout(function() { modal.classList.add('hidden'); }, 300);
+      }
+    }
+
+    function updateProvider() {
+      const prov = document.getElementById('aiProvider').value;
+      document.getElementById('apiKeySection').classList.toggle('hidden', prov === 'demo');
+      document.getElementById('endpointSection').classList.toggle('hidden', prov !== 'custom');
+      const badge = document.getElementById('modelBadge');
+      if (prov === 'demo') badge.textContent = 'Demo Mode';
+      else if (prov === 'openai') badge.textContent = 'OpenAI';
+      else if (prov === 'openrouter') badge.textContent = 'OpenRouter';
+      else badge.textContent = 'Custom';
+      saveSettings();
+    }
+
+    function saveSettings() {
+      const s = {
+        provider: document.getElementById('aiProvider').value,
+        apiKey: document.getElementById('apiKeyInput').value,
+        baseUrl: document.getElementById('baseUrlInput').value,
+        model: document.getElementById('modelInput').value
+      };
+      storageSet('ict_settings', JSON.stringify(s));
+    }
+
+    function loadSettings() {
+      const s = storageGet('ict_settings');
+      let cfg = {};
+      if (s) { try { cfg = JSON.parse(s); } catch(e){} }
+      document.getElementById('apiKeyInput').value = cfg.apiKey || DEFAULT_API_KEY;
+      document.getElementById('baseUrlInput').value = cfg.baseUrl || DEFAULT_BASEURL;
+      document.getElementById('modelInput').value = cfg.model || DEFAULT_MODEL;
+      document.getElementById('aiProvider').value = cfg.provider || DEFAULT_PROVIDER;
+      updateProvider();
+    }
+
+    function setupTextarea() {
+      const ta = document.getElementById('userInput');
+      ta.addEventListener('input', function() {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 192) + 'px';
+      });
+    }
+
+    function scrollToBottom() {
+      const c = document.getElementById('chatContainer');
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /* === MARKDOWN RENDERER === */
+    function mdToHtml(md) {
+      let text = md;
+      text = text.replace(/```([\w]*)\n([\s\S]*?)```/g, '<pre class="bg-slate-950 border border-slate-800 rounded-lg p-3 overflow-x-auto my-3 text-sm"><code class="language-$1">$2</code></pre>');
+      text = text.replace(/`([^`]+)`/g, '<code class="bg-slate-800 px-1 py-0.5 rounded text-xs text-ict-300 font-mono">$1</code>');
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      text = text.replace(/^#### (.*?)$/gm, '<h4 class="text-lg font-semibold mt-4 mb-2">$1</h4>');
+      text = text.replace(/^### (.*?)$/gm, '<h3 class="text-xl font-semibold mt-5 mb-2">$1</h3>');
+      text = text.replace(/^## (.*?)$/gm, '<h2 class="text-2xl font-bold mt-6 mb-3">$1</h2>');
+      text = text.replace(/^# (.*?)$/gm, '<h1 class="text-3xl font-bold mt-6 mb-4">$1</h1>');
+      text = text.replace(/^> (.*?)$/gm, '<blockquote class="border-l-4 border-ict-500 pl-4 py-1 my-2 text-slate-400 italic">$1</blockquote>');
+      text = text.replace(/^(\s*)- (.*?)$/gm, '$1<li class="ml-5 list-disc">$2</li>');
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-ict-400 hover:underline">$1</a>');
+      text = text.split(/\n\s*\n/).map(function(p) {
+        return p.trim().charAt(0) === '<' ? p : '<p class="mb-3 leading-relaxed">' + p + '</p>';
+      }).join('');
+      return text;
+    }
+
+    function highlightCode() {
+      document.querySelectorAll('pre code').forEach(function(block) {
+        if (block.parentElement.querySelector('.code-copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.className = 'code-copy-btn bg-slate-700 hover:bg-slate-600 text-white text-[10px] px-2 py-1 rounded shadow';
+        btn.textContent = 'Sao chép';
+        btn.onclick = function() {
+          navigator.clipboard.writeText(block.textContent);
+          btn.textContent = 'Đã chép!';
+          setTimeout(function() { btn.textContent = 'Sao chép'; }, 1500);
+        };
+        block.parentElement.appendChild(btn);
+      });
+    }
+
+    /* === MESSAGE RENDERING === */
+    function appendMessage(role, content, animate) {
+      const container = document.getElementById('chatContainer');
+      const welcome = document.getElementById('welcomeScreen');
+      if (welcome && !welcome.classList.contains('hidden')) welcome.classList.add('hidden');
+
+      const div = document.createElement('div');
+      div.className = 'flex gap-4 chat-bubble ' + (role === 'assistant' ? 'pr-4 md:pr-12' : 'pl-4 md:pl-12 flex-row-reverse');
+      const avatarColor = role === 'assistant' ? 'bg-gradient-to-br from-ict-500 to-ict-700' : 'bg-slate-700';
+      const avatarIcon = role === 'assistant'
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>'
+        : '<span class="text-xs font-bold">YOU</span>';
+
+      div.innerHTML = '<div class="flex-shrink-0 w-8 h-8 rounded-full ' + avatarColor + ' flex items-center justify-center shadow-lg mt-0.5">' + avatarIcon + '</div>' +
+        '<div class="flex-1 min-w-0">' +
+          '<div class="text-xs font-medium ' + (role === 'assistant' ? 'text-ict-400' : 'text-slate-400') + ' mb-0.5">' + (role === 'assistant' ? 'Chat ICT' : 'Bạn') + '</div>' +
+          '<div class="text-slate-200 text-[15px] leading-relaxed message-content">' + (animate ? '' : mdToHtml(content)) + '</div>' +
+        '</div>';
+
+      container.appendChild(div);
+      scrollToBottom();
+      return div.querySelector('.message-content');
+    }
+
+    /* === CORE CHAT === */
+    function fillAndSend(text) {
+      document.getElementById('userInput').value = text;
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text || isGenerating) return;
+
+      appendMessage('user', text, false);
+      addMessageToCurrent('user', text);
+      input.value = '';
+      input.style.height = 'auto';
+
+      isGenerating = true;
+      const contentEl = appendMessage('assistant', '', true);
+      contentEl.innerHTML = '<div class="shimmer h-4 w-32 rounded"></div>';
+
+      const provider = document.getElementById('aiProvider').value;
+
+      if (provider === 'demo') {
+        const response = demoBrain(text);
+        await streamText(contentEl, response);
+        addMessageToCurrent('assistant', response);
+        isGenerating = false;
+      } else {
+        await streamFromAPI(contentEl, text, provider);
+      }
+    }
+
+    function streamText(element, fullText, speed) {
+      speed = speed || 12;
+      return new Promise(function(resolve) {
+        let i = 0;
+        function step() {
+          const chunk = Math.ceil(fullText.length / (fullText.length > 400 ? 30 : 15));
+          const end = Math.min(i + chunk, fullText.length);
+          i = end;
+          const current = fullText.slice(0, i);
+          element.innerHTML = mdToHtml(current);
+          highlightCode();
+          scrollToBottom();
+          if (i < fullText.length) {
+            setTimeout(step, speed + Math.random() * speed);
+          } else {
+            resolve();
+          }
+        }
+        step();
+      });
+    }
+
+    /* === DEMO AI BRAIN === */
+    function demoBrain(input) {
+      const q = input.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (q.includes('chao') || q.includes('xin chao') || q.includes('hello') || q.includes('hi')) {
+ return "Chào bạn! Tôi là **Chat ICT**. Hôm nay bạn muốn tìm hiểu điều gì? Tôi có thể giúp bạn viết code, giải thích kỹ thuật, hoặc trò chuyện.";
+      }
+      if (q.includes('code') || q.includes('viet chuong trinh') || q.includes('javascript') || q.includes('python') || q.includes('html') || q.includes('css')) {
+        if (q.includes('danh may') || q.includes('typing')) {
+          return "Dưới đây là đoạn code **JavaScript** tạo hiệu ứng đánh máy:\n\n```javascript\nfunction typeWriter(element, text, speed) {\n  speed = speed || 50;\n  let i = 0;\n  function type() {\n    if (i < text.length) {\n      element.innerHTML += text.charAt(i);\n      i++;\n      setTimeout(type, speed);\n    }\n  }\n  type();\n}\n\n// Cách dùng:\nconst el = document.getElementById('output');\ntypeWriter(el, 'Xin chào từ Chat ICT!');\n```\n\nBạn có thể điều chỉnh `speed` để thay đổi tốc độ.";
+        }
+        if (q.includes('python')) {
+          return "Đây là đoạn code **Python** đọc file:\n\n```python\ndef read_file(path):\n    try:\n        with open(path, 'r', encoding='utf-8') as f:\n            return f.read()\n    except FileNotFoundError:\n        return \"File không tồn tại\"\n\nprint(read_file('data.txt'))\n```\n\nChat ICT hỗ trợ hầu hết các ngôn ngữ lập trình phổ biến.";
+        }
+        return "Tôi sẵn sàng viết code! Hãy cho tôi biết:\n- Ngôn ngữ bạn dùng (JavaScript, Python, C++, v.v.)\n- Mục đích của đoạn code\n- Có giao diện (UI) hay xử lý logic không";
+ }
+      if (q.includes('machine learning') || q.includes('hoc may') || q.includes('ai')) {
+        return "## Machine Learning là gì?\n\n**Machine Learning (Học máy)** là một nhánh của AI, cho phép máy tính \"học\" từ dữ liệu mà không cần lập trình thủ công từng quy tắc.\n\n### 3 loại chính:\n1. **Học có giám sát** — Dùng dữ liệu đã gán nhãn để dự đoán.\n2. **Học không giám sát** — Tìm mẫu ẩn trong dữ liệu chưa gán nhãn.\n3. **Học tăng cường** — Agent học bằng cách thử và nhận phần thưởng/phạt.\n\n> Bạn muốn tìm hiểu sâu về thuật toán nào?";
+      }
+      if (q.includes('dich') || q.includes('dich sang') || q.includes('translate')) {
+        if (q.includes('tieng anh') || q.includes('english')) return "Bản dịch sang tiếng Anh:\n\n**\"Xin chào thế giới\"** → **\"Hello world\"**\n\nNếu bạn có đoạn văn dài hơn, hãy paste vào đây, tôi sẽ dịch chính xác và tự nhiên.";
+        if (q.includes('tieng viet') || q.includes('vietnamese')) return "Bản dịch sang tiếng Việt:\n\n**\"Hello world\"** → **\"Xin chào thế giới\"**\n\nTôi có thể giữ nguyên giọng văn nếu bạn yêu cầu.";
+        return "Tôi có thể dịch giữa nhiều ngôn ngữ: Anh, Việt, Nhật, Hàn, Trung, Pháp, Đức, và nhiều hơn nữa. Hãy gửi đoạn văn và cho tôi biết ngôn ngữ đích.";
+      }
+      if (q.includes('ngay') || q.includes('gio') || q.includes('thoi gian') || q.includes('hom nay')) {
+        const now = new Date();
+        return 'Hôm nay là **' + now.toLocaleDateString('vi-VN') + '**, bây giờ là **' + now.toLocaleTimeString('vi-VN') + '**.\n\n*(Lưu ý: Tôi lấy thời gian từ thiết bị của bạn.)*';
+      }
+      if (q.includes('tinh') || q.includes('bao nhieu') || q.includes('cong') || q.includes('tru') || q.includes('nhan') || q.includes('chia')) {
+        try {
+          const expr = input.replace(/[^0-9+\-*/().]/g, '');
+          if (expr && expr.length > 2) {
+            const res = Function('"use strict"; return (' + expr + ')')();
+ return 'Kết quả: **' + input + '** = **' + res + '**';
+ }
+        } catch(e) {}
+      }
+      if ((q.includes('ten') || q.includes('may') || q.includes('ban') || q.includes('ai')) && (q.includes('la ai') || q.includes('ten gi'))) {
+        return "Tôi là **Chat ICT** 🚀 — một trợ lý AI được tạo ra để đồng hành cùng bạn trong công việc, học tập và sáng tạo. Tôi có thể viết code, trả lời câu hỏi, dịch thuật, phân tích dữ liệu và hỗ trợ brainstorm ý tưởng.";
+      }
+      if (q.includes('help') || q.includes('giup') || q.includes('ho tro') || q.includes('lam duoc gi')) {
+        return "## Chat ICT có thể làm gì?\n\n- 💻 **Viết & sửa code**\n- 🧠 **Giải thích** các khái niệm khoa học, lập trình\n- 🌐 **Dịch thuật** đa ngôn ngữ\n- 📝 **Tóm tắt** văn bản, viết email\n- 🎨 **Brainstorm** ý tưởng sáng tạo\n- 🔢 **Tính toán** và phân tích số liệu\n\n> 💡 **Mẹo:** Bạn có thể bật **API thật** trong phần *Cài đặt* để tôi trở nên mạnh mẽ như GPT-4!";
+      }
+      return 'Đó là câu hỏi thú vị! 🎯\n\nVì hiện tại bạn đang dùng **Demo Mode**, tôi đang trả lời dựa trên kịch bản có sẵn. Để có câu trả lời chính xác và chuyên sâu nhất cho câu hỏi:\n\n> *\"' + escapeHtml(input) + '\"*\n\nTôi khuyên bạn nên:\n1. Mở **Cài đặt** (biểu tượng bánh răng)\n2. Chọn nhà cung cấp AI (key OpenRouter đã được gán sẵn)\n3. Bắt đầu chat với khả năng tư duy thực sự.\n\nBạn cần hướng dẫn tích hợp API không?';
+    }
+
+    /* === REAL API STREAMING === */
+    async function streamFromAPI(contentEl, userText, provider) {
+      const settings = JSON.parse(storageGet('ict_settings') || '{}');
+      let baseUrl = settings.baseUrl || '';
+      let model = settings.model || DEFAULT_MODEL;
+      let apiKey = settings.apiKey || DEFAULT_API_KEY;
+
+      if (provider === 'openai') baseUrl = 'https://api.openai.com/v1';
+      if (provider === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1';
+      if (!baseUrl || !apiKey) {
+        contentEl.innerHTML = mdToHtml("⚠️ **Thiếu cấu hình API.** Vui lòng vào **Cài đặt** để kiểm tra API Key và Base URL.");
+        isGenerating = false;
+        return;
+      }
+
+      const current = getCurrentChat();
+      if (!current) {
+        isGenerating = false;
+        return;
+      }
+
+      const history = current.messages.slice(-10).map(function(m) { return {role: m.role, content: m.content}; });
+      const url = baseUrl.replace(/\/$/, '') + '/chat/completions';
+      currentController = new AbortController();
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey,
+            'HTTP-Referer': location.href,
+            'X-Title': 'Chat ICT'
+          },
+          body: JSON.stringify({ model: model, messages: history, stream: true, temperature: 0.7 }),
+          signal: currentController.signal
+        });
+
+        if (!res.ok) {
+          let errText = '';
+          try { errText = await res.text(); } catch(e) { errText = res.statusText; }
+          throw new Error('HTTP ' + res.status + ': ' + errText);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+
+        contentEl.innerHTML = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream: true});
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line.trim() || line.trim() === 'data: [DONE]') continue;
+ try {
+              const json = JSON.parse(line.replace(/^data: /, ''));
+              const delta = json.choices && json.choices[0] && json.choices[0].delta ? json.choices[0].delta.content || '' : '';
+              fullText += delta;
+ contentEl.innerHTML = mdToHtml(fullText);
+              highlightCode();
+              scrollToBottom();
+            } catch(e) {}
+          }
+        }
+        addMessageToCurrent('assistant', fullText);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          contentEl.innerHTML = mdToHtml(fullText + "\n\n*[Đã dừng]*");
+        } else {
+          contentEl.innerHTML = mdToHtml('❌ **Lỗi kết nối API:**\n```\n' + err.message + '\n```\n\nVui lòng kiểm tra lại API Key, model name và kết nối mạng.');
+        }
+      } finally {
+        isGenerating = false;
+        currentController = null;
+      }
+    }
+
+    /* === INIT === */
+    function init() {
+      const saved = storageGet('ict_chats');
+      if (saved) {
+        try { chats = JSON.parse(saved); } catch(e) { chats = []; }
+      }
+      if (!chats.length) newChat(true);
+      else loadChat(chats[0].id);
+      renderHistory();
+      loadSettings();
+      setupTextarea();
+    }
+
+    init();
+  </script>
+</body>
+</html>
