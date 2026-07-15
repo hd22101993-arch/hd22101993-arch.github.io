@@ -197,16 +197,18 @@
     let memoryStore = {};
     const ICT_WELCOME = "Xin chào! Tôi là **Chat ICT** — trợ lý AI được xây dựng để giúp bạn viết code, giải thích khái niệm, dịch thuật và nhiều hơn nữa. Hôm nay tôi có thể giúp gì cho bạn?";
  const DEFAULT_PROVIDER = 'openrouter';
-    // Hiện hộp thoại yêu cầu bạn nhập key khi vừa mở trang web lên
-const apiKey = prompt("Vui lòng nhập OpenRouter API Key của bạn để chat:");
-
-if (!apiKey) {
-    alert("Bạn phải nhập API Key thì AI mới hoạt động được!");
-} else {
-    // Đoạn code gọi API OpenRouter của bạn sẽ dùng biến apiKey này
-    // Ví dụ trong phần Headers của fetch:
-    // "Authorization": `Bearer ${apiKey}`
+   let apiKey = "";
+// Vòng lặp này sẽ chạy liên tục, bắt buộc người dùng phải nhập chuỗi hợp lệ
+// Nếu bấm OK mà để trống, hoặc bấm Cancel, nó sẽ hỏi lại mãi mãi không cho vào web
+while (!apiKey || apiKey.trim() === "") {
+    apiKey = prompt("Vui lòng nhập OpenRouter API Key của bạn để bắt đầu:");
+    
+    if (!apiKey || apiKey.trim() === "") {
+        alert("Cảnh báo: Bạn CHƯA nhập API Key! Vui lòng nhập để AI hoạt động.");
+    }
 }
+// Chỉ khi vượt qua vòng lặp trên (đã nhập key thật) thì mới chạy đến đây
+// Tiếp tục đoạn code cấu hình OpenRouter của bạn với biến apiKey...
     const DEFAULT_BASEURL = 'https://openrouter.ai/api/v1';
     const DEFAULT_MODEL = 'openai/gpt-3.5-turbo';
 
