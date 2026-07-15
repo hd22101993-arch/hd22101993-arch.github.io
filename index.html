@@ -49,8 +49,6 @@
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 h-screen overflow-hidden flex selection:bg-ict-500 selection:text-white">
-  
-<link rel="icon" type="image/png" href="favicon.png">
 
   <aside id="sidebar" class="w-72 bg-slate-950 border-r border-slate-800 flex flex-col transition-all duration-300 absolute md:relative z-20 h-full -translate-x-full md:translate-x-0">
     <div class="p-4 border-b border-slate-800 flex items-center justify-between">
@@ -199,18 +197,7 @@
     let memoryStore = {};
     const ICT_WELCOME = "Xin chào! Tôi là **Chat ICT** — trợ lý AI được xây dựng để giúp bạn viết code, giải thích khái niệm, dịch thuật và nhiều hơn nữa. Hôm nay tôi có thể giúp gì cho bạn?";
  const DEFAULT_PROVIDER = 'openrouter';
-   let apiKey = "";
-// Vòng lặp này sẽ chạy liên tục, bắt buộc người dùng phải nhập chuỗi hợp lệ
-// Nếu bấm OK mà để trống, hoặc bấm Cancel, nó sẽ hỏi lại mãi mãi không cho vào web
-while (!apiKey || apiKey.trim() === "") {
-    apiKey = prompt("Vui lòng nhập OpenRouter API Key của bạn để bắt đầu:");
-    
-    if (!apiKey || apiKey.trim() === "") {
-        alert("Cảnh báo: Bạn CHƯA nhập API Key! Vui lòng nhập để AI hoạt động.");
-    }
-}
-// Chỉ khi vượt qua vòng lặp trên (đã nhập key thật) thì mới chạy đến đây
-// Tiếp tục đoạn code cấu hình OpenRouter của bạn với biến apiKey...
+    const DEFAULT_API_KEY = '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';
     const DEFAULT_BASEURL = 'https://openrouter.ai/api/v1';
     const DEFAULT_MODEL = 'openai/gpt-3.5-turbo';
 
